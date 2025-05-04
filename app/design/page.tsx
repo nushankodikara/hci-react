@@ -289,7 +289,7 @@ export default function DesignPage() {
                 {/* --- Main Content Area (Sidebars + Center) --- */}
                 <div className="flex flex-1 overflow-hidden"> {/* Main area below nav */} 
                     {/* --- Left Sidebar --- */}
-                    <aside className="w-72 border-r flex flex-col bg-card overflow-hidden">
+                    <aside className="w-72 border-r flex flex-col bg-card overflow-scroll">
                         <ScrollArea className="flex-grow p-4">
                             <div className="space-y-6">
                                 {/* Room Settings */}
