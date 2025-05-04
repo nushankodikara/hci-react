@@ -7,9 +7,10 @@ import * as THREE from 'three';
 import { useDesignContext, FurnitureItem, RoomData } from '@/context/DesignContext';
 
 // --- Constants --- 
-const DEFAULT_SIZE = 40; 
+const DEFAULT_SIZE = 40; // Original default size, reuse for marker?
 const GRID_SPACING = 50;
 const SCALE_FACTOR = 0.02; // Define scale factor globally within the component
+const DEFAULT_2D_MARKER_SIZE = 30; // Define a specific size for the 2D square marker
 
 // --- Floor Plane Component --- 
 // Removed: Now integrated into FloorPlanScene for easier handler access
@@ -24,7 +25,8 @@ interface FurnitureItemMeshProps {
 
 const FurnitureItemMesh: React.FC<FurnitureItemMeshProps> = ({ item, isSelected, room, onDragStart }) => {
     const meshRef = useRef<THREE.Mesh>(null);
-    const DEFAULT_SIZE_3D = DEFAULT_SIZE * SCALE_FACTOR; 
+    // Calculate the scaled size for the 2D marker
+    const MARKER_SIZE_SCALED = DEFAULT_2D_MARKER_SIZE * SCALE_FACTOR;
 
     const material = useMemo(() => new THREE.MeshStandardMaterial({
         color: isSelected ? '#007bff' : (item.color || '#aaaaaa'),
@@ -48,10 +50,10 @@ const FurnitureItemMesh: React.FC<FurnitureItemMeshProps> = ({ item, isSelected,
     return (
         <Box 
             ref={meshRef} 
-            args={[item.width * SCALE_FACTOR, 0.1, item.depth * SCALE_FACTOR]} // Use actual item dimensions scaled
+            // Use the fixed marker size for args (width, height, depth)
+            args={[MARKER_SIZE_SCALED, 0.1, MARKER_SIZE_SCALED]} 
             position={position} 
             rotation={[0, item.rotationY ?? 0, 0]} 
-            // Scale is already handled by args based on item dimensions
             material={material}
             onPointerDown={handlePointerDown}
             castShadow
