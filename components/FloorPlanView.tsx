@@ -2,7 +2,7 @@
 
 import React, { Suspense, useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { Canvas, useThree, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, OrthographicCamera, Grid, Plane, Box, Line } from '@react-three/drei';
+import { OrbitControls, OrthographicCamera, Grid, Plane, Box, Line, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useDesignContext, FurnitureItem, RoomData } from '@/context/DesignContext';
 
@@ -47,18 +47,35 @@ const FurnitureItemMesh: React.FC<FurnitureItemMeshProps> = ({ item, isSelected,
         onDragStart(item.id, event); // Notify parent about drag start
     };
 
+    // Determine text label
+    const labelText = item.modelName || `Item`; // Fallback label
+
     return (
-        <Box 
-            ref={meshRef} 
-            // Use the fixed marker size for args (width, height, depth)
-            args={[MARKER_SIZE_SCALED, 0.1, MARKER_SIZE_SCALED]} 
-            position={position} 
-            rotation={[0, item.rotationY ?? 0, 0]} 
-            material={material}
-            onPointerDown={handlePointerDown}
-            castShadow
-        >
-        </Box>
+        // Group the Box and Text together
+        <group position={position}>
+            {/* The Box marker */}
+            <Box 
+                ref={meshRef} 
+                args={[MARKER_SIZE_SCALED, 0.1, MARKER_SIZE_SCALED]} 
+                rotation={[0, item.rotationY ?? 0, 0]} 
+                material={material}
+                onPointerDown={handlePointerDown}
+                castShadow
+            />
+             {/* The Text Label */}
+             <Text
+                position={[0, 0.1, 0]} // Position slightly above the box center
+                rotation={[-Math.PI / 2, 0, 0]} // Rotate to lay flat facing up
+                fontSize={MARKER_SIZE_SCALED * 0.5} // Adjust font size relative to marker size
+                color={isSelected ? "#0000ff" : "#333333"} // Darker color for readability, blue when selected
+                anchorX="center" // Center horizontally
+                anchorY="middle" // Center vertically
+                maxWidth={MARKER_SIZE_SCALED * 2} // Limit text width
+            >
+                {/* Pass text content as children */}
+                {labelText}
+            </Text>
+        </group>
     );
 };
 
