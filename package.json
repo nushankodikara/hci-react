@@ -1,6 +1,6 @@
 {
-  "name": "hci-dineth",
-  "version": "0.1.0",
+  "name": "hci-project",
+  "version": "0.1.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
