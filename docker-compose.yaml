@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: . # Use the current directory as the build context
+      dockerfile: Dockerfile # Specify the Dockerfile name
+    container_name: room_designer_app
+    ports:
+      - "3000:3000" # Map host port 3000 to container port 3000 (Next.js default)
+    volumes:
+      # Mount persistent volume for SQLite database
+      # It will be created inside the container's working directory (/app)
+      # and named 'prod.db' because NODE_ENV is 'production'.
+      - db_data:/app
+      # Mount persistent volume for uploaded models
+      - models_data:/app/public/models
+    environment:
+      # Ensure Next.js runs in production mode inside the container
+      NODE_ENV: production
+      # You might need to add other environment variables here if your app uses them
+      # e.g., DATABASE_URL (if you changed db connection), NEXTAUTH_SECRET, etc.
+    restart: unless-stopped # Restart policy
+
+volumes:
+  db_data: # Named volume for the database file(s)
+  models_data: # Named volume for the uploaded models
