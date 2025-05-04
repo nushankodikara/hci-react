@@ -1,6 +1,6 @@
 # Dockerfile
-# 1. Base Image - Use an official Node.js image (Alpine is smaller)
-FROM node:20-alpine AS base
+# 1. Base Image - Use a standard Node.js image (Debian-based)
+FROM node:20 AS base
 
 # Set working directory
 WORKDIR /app
@@ -22,21 +22,23 @@ COPY . .
 RUN npm run build
 
 # 3. Runner Stage - Setup the production environment
-FROM base AS runner
+# Use the same base image type for the runner
+FROM node:20 AS runner 
 WORKDIR /app
 
 # Set NODE_ENV to production
 ENV NODE_ENV production
 
 # Optionally create a non-root user for security
-# RUN addgroup -g 1001 -S nodejs
-# RUN adduser -S nextjs -u 1001
+# RUN addgroup --system --gid 1001 nodejs
+# RUN adduser --system --uid 1001 nextjs
 # USER nextjs
 
 # Copy necessary files from builder stage
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Add --chown flags if using non-root user
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 # Expose the port the app runs on
 EXPOSE 3000
