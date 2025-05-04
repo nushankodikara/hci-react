@@ -25,6 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // For icon buttons
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 // Potentially needed later: Dialog, Table, etc. for Save/Load integrated here?
 
 // --- Lucide Icons --- 
@@ -59,6 +60,8 @@ export default function DesignPage() {
     const [saveDesignName, setSaveDesignName] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
+    const [isDeletingModel, setIsDeletingModel] = useState<number | null>(null); // Store ID of model being deleted
+    const [deleteModelError, setDeleteModelError] = useState<string | null>(null);
     // Note: Load functionality might live primarily on the dashboard now
 
     // State for pane visibility
@@ -188,6 +191,26 @@ export default function DesignPage() {
         }
     };
 
+    const handleDeleteModel = async (modelId: number) => {
+        setIsDeletingModel(modelId); // Show loading state for specific button
+        setDeleteModelError(null);
+        try {
+            const res = await fetch(`/api/models/${modelId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to delete model');
+            }
+            console.log('Model deleted successfully');
+            fetchAvailableModels(); // Refresh the list
+        } catch (error: any) {
+            console.error('Delete model error:', error);
+            setDeleteModelError(error.message || 'An unknown error occurred');
+            // Optionally show error via Toast
+        } finally {
+            setIsDeletingModel(null); // Clear loading state
+        }
+    };
+
     if (!isAuthenticated) {
         // Or better, use middleware or a Higher-Order Component for auth protection
         // router.push('/login');
@@ -294,15 +317,57 @@ export default function DesignPage() {
                                 {/* Add Furniture */}
                                 <section>
                                     <h3 className="text-sm font-medium mb-3 flex items-center gap-2"><List className="h-4 w-4"/> Add Furniture</h3>
+                                    {/* Display overall delete error if any */} 
+                                    {deleteModelError && <Alert variant="destructive" className="mb-2 text-xs"><FileWarning className="h-4 w-4"/><AlertTitle>Delete Error</AlertTitle><AlertDescription>{deleteModelError}</AlertDescription></Alert>}
                                      <ScrollArea className="h-48 w-full rounded-md border p-2">
                                          {availableModels.length === 0 ? (
-                                            <p className="text-xs text-muted-foreground text-center p-2">No models</p>
+                                            <p className="text-xs text-muted-foreground text-center p-2">No models uploaded</p>
                                         ) : (
                                             <div className="space-y-1">
                                             {availableModels.map((model) => (
-                                                <Button key={model.id} onClick={() => handleAddFurniture(model)} variant="ghost" className="w-full justify-start">
-                                                 <PackagePlus className="mr-2 h-4 w-4"/>{model.name}
-                                                </Button>
+                                                <div key={model.id} className="flex items-center justify-between gap-1 group p-1 rounded hover:bg-muted">
+                                                    {/* Add Button */} 
+                                                    <Button 
+                                                        onClick={() => handleAddFurniture(model)} 
+                                                        variant="ghost" 
+                                                        className="flex-grow justify-start text-left h-8 px-2" // Adjust padding/height
+                                                    >
+                                                        <PackagePlus className="mr-2 h-4 w-4 flex-shrink-0"/>
+                                                        <span className="truncate">{model.name}</span>
+                                                    </Button>
+                                                    {/* Delete Button - Conditionally visible or always visible */} 
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" // Style for subtle delete
+                                                                disabled={isDeletingModel === model.id} // Disable while deleting this specific model
+                                                            >
+                                                                {isDeletingModel === model.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                                                <span className="sr-only">Delete {model.name}</span>
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Delete Model?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    This will permanently delete the model "{model.name}" from the library.
+                                                                    This action cannot be undone. Furniture using this model in saved designs might not render correctly.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                <AlertDialogAction 
+                                                                    onClick={() => handleDeleteModel(model.id)} 
+                                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                >
+                                                                    Yes, delete model
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </div>
                                             ))}
                                             </div>
                                         )}

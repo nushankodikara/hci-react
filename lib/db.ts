@@ -102,6 +102,39 @@ export function getAvailableModels(): Promise<Model[]> {
     });
 }
 
+// NEW: Function to delete a model by ID
+export function deleteModelById(id: number): Promise<Model | null> {
+  return new Promise((resolve, reject) => {
+    // First, get the model details (especially filePath) before deleting
+    db.get('SELECT id, name, filePath, createdAt FROM models WHERE id = ?', [id], (err: Error | null, row: Model | undefined) => {
+      if (err) {
+        console.error('Error fetching model before delete:', err.message);
+        return reject(err);
+      }
+      if (!row) {
+        // Model not found, resolve with null or reject
+        console.warn(`Model with ID ${id} not found for deletion.`);
+        return resolve(null);
+      }
+
+      // Model found, proceed with deletion
+      const modelToDelete = row; // Store the row data
+      db.run('DELETE FROM models WHERE id = ?', [id], function(this: Database.RunResult, deleteErr: Error | null) {
+        if (deleteErr) {
+          console.error('Error deleting model:', deleteErr.message);
+          return reject(deleteErr);
+        }
+        if (this.changes === 0) {
+          // Should not happen if we found it above, but good practice
+          console.warn(`Zero rows affected when deleting model ID ${id}.`);
+        }
+        console.log(`Model deleted successfully from DB with ID: ${id}`);
+        resolve(modelToDelete); // Resolve with the data of the deleted model
+      });
+    });
+  });
+}
+
 // --- User Functions ---
 
 export function addUser(username: string, passwordHash: string): Promise<number> {
