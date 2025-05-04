@@ -36,6 +36,7 @@ import {
     PanelLeft, PanelRight, // For potentially toggling sidebars
     Home, // For linking back to dashboard
     Minimize2, Maximize2, // Icons for pane controls
+    Layout, // Icon for Reset Layout button
 } from 'lucide-react';
 
 export default function DesignPage() {
@@ -50,8 +51,9 @@ export default function DesignPage() {
 
     // --- Local State for Controls (Migrated from app/page.tsx) --- 
     const [localWidth, setLocalWidth] = useState(room.width.toString());
-    const [localHeight, setLocalHeight] = useState(room.height.toString());
+    const [localLength, setLocalLength] = useState(room.length.toString());
     const [localWallColor, setLocalWallColor] = useState(room.wallColor);
+    const [localWallHeight, setLocalWallHeight] = useState(room.wallHeight.toString());
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
@@ -78,8 +80,9 @@ export default function DesignPage() {
     // --- Effects --- 
     useEffect(() => {
         setLocalWidth(room.width.toString());
-        setLocalHeight(room.height.toString());
+        setLocalLength(room.length.toString());
         setLocalWallColor(room.wallColor);
+        setLocalWallHeight(room.wallHeight.toString());
     }, [room]); // Update local state when context changes (e.g., after loading a design)
 
      useEffect(() => {
@@ -92,10 +95,12 @@ export default function DesignPage() {
     // --- Handlers (Migrated and adapted from app/page.tsx) --- 
     const handleRoomUpdate = () => {
         const newWidth = parseInt(localWidth, 10);
-        const newHeight = parseInt(localHeight, 10);
+        const newLength = parseInt(localLength, 10);
+        const newWallHeight = parseInt(localWallHeight, 10);
         const updates: Partial<RoomData> = {};
         if (!isNaN(newWidth) && newWidth > 0) updates.width = newWidth;
-        if (!isNaN(newHeight) && newHeight > 0) updates.height = newHeight;
+        if (!isNaN(newLength) && newLength > 0) updates.length = newLength;
+        if (!isNaN(newWallHeight) && newWallHeight > 0) updates.wallHeight = newWallHeight;
         if (Object.keys(updates).length > 0) setRoom(updates);
     };
 
@@ -133,7 +138,7 @@ export default function DesignPage() {
     };
 
     const handleAddFurniture = (model: AvailableModel) => {
-        addFurniture({ modelPath: model.filePath, modelName: model.name, x: room.width / 2, y: room.height / 2 });
+        addFurniture({ modelPath: model.filePath, modelName: model.name, x: room.width / 2, y: room.length / 2 });
     };
 
     const handleSaveDesign = async () => {
@@ -176,19 +181,19 @@ export default function DesignPage() {
     const toggleFloorPlan = () => {
         const minimizing = !isFloorPlanMinimized;
         setIsFloorPlanMinimized(minimizing);
-        // If minimizing floor plan, ensure 3D is maximized
-        if (minimizing) {
-            setIsCanvas3DMinimized(false);
-        }
+        if (minimizing) setIsCanvas3DMinimized(false);
     };
 
     const toggleCanvas3D = () => {
         const minimizing = !isCanvas3DMinimized;
         setIsCanvas3DMinimized(minimizing);
-        // If minimizing 3D, ensure floor plan is maximized
-        if (minimizing) {
-            setIsFloorPlanMinimized(false);
-        }
+        if (minimizing) setIsFloorPlanMinimized(false);
+    };
+
+    // New Handler to reset layout
+    const handleResetLayout = () => {
+        setIsFloorPlanMinimized(false);
+        setIsCanvas3DMinimized(false);
     };
 
     const handleDeleteModel = async (modelId: number) => {
@@ -232,6 +237,17 @@ export default function DesignPage() {
                         {/* Placeholder for central nav items or breadcrumbs */}
                      </div>
                      <div className="flex items-center gap-2">
+                         {/* Reset Layout Button */} 
+                         <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleResetLayout}>
+                                    <Maximize2 className="h-4 w-4" /> {/* Using Maximize icon for reset */} 
+                                    <span className="sr-only">Reset Layout</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Reset Layout</TooltipContent>
+                        </Tooltip>
+                        <Separator orientation="vertical" className="h-6" />
                          {/* Save Input & Button - Simplified for now */}
                          <Input 
                              type="text" 
@@ -285,8 +301,12 @@ export default function DesignPage() {
                                             <Input id="roomWidth" type="number" value={localWidth} onChange={(e) => setLocalWidth(e.target.value)} onBlur={handleRoomUpdate} min="100" />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="roomHeight">Height</Label>
-                                            <Input id="roomHeight" type="number" value={localHeight} onChange={(e) => setLocalHeight(e.target.value)} onBlur={handleRoomUpdate} min="100" />
+                                            <Label htmlFor="roomLength">Length</Label>
+                                            <Input id="roomLength" type="number" value={localLength} onChange={(e) => setLocalLength(e.target.value)} onBlur={handleRoomUpdate} min="100" />
+                                        </div>
+                                        <div className="grid w-full items-center gap-1.5">
+                                            <Label htmlFor="wallHeight">Wall Height</Label>
+                                            <Input id="wallHeight" type="number" value={localWallHeight} onChange={(e) => setLocalWallHeight(e.target.value)} onBlur={handleRoomUpdate} min="50" />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">
                                             <Label htmlFor="wallColor"><Palette className="h-3 w-3 inline mr-1"/> Wall Color</Label>
@@ -380,40 +400,42 @@ export default function DesignPage() {
                     {/* --- Center Area --- Adjusted for collapsible panes */}
                     <main className="flex-1 flex flex-col p-4 space-y-4 bg-muted/30 overflow-auto">
                         {/* 2D View - Conditionally render size/visibility */} 
-                        <Card className={`shadow-sm overflow-hidden ${isFloorPlanMinimized ? 'hidden' : (isCanvas3DMinimized ? 'flex-1' : 'flex-1 min-h-[300px]')}`}> 
-                            <CardHeader className="p-2 border-b flex flex-row items-center justify-between"> {/* Flex header */} 
+                        <Card className={`shadow-sm overflow-hidden transition-all duration-300 ease-in-out ${isFloorPlanMinimized ? 'flex-none h-14' : (isCanvas3DMinimized ? 'flex-1' : 'flex-1 min-h-[300px]')}`}> 
+                            <CardHeader className="p-2 border-b flex flex-row items-center justify-between h-14"> {/* Fixed header height */} 
                                 <CardTitle className="text-sm font-medium">2D Floor Plan</CardTitle>
-                                {/* Minimize Button */} 
                                 <Tooltip>
                                     <TooltipTrigger asChild>
+                                        {/* Button toggles state, icon changes based on state */} 
                                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={toggleFloorPlan}>
-                                            <Minimize2 className="h-4 w-4" />
-                                            <span className="sr-only">Minimize 2D View</span>
+                                            {isFloorPlanMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                                            <span className="sr-only">{isFloorPlanMinimized ? 'Maximize' : 'Minimize'} 2D View</span>
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Minimize 2D</TooltipContent>
+                                    <TooltipContent>{isFloorPlanMinimized ? 'Maximize' : 'Minimize'} 2D</TooltipContent>
                                 </Tooltip>
                             </CardHeader>
-                            <CardContent className="p-0 h-full w-full relative">
+                            {/* Hide content when minimized */} 
+                            <CardContent className={`p-0 h-full w-full relative ${isFloorPlanMinimized ? 'hidden' : 'block'}`}> 
                                 <FloorPlanView /> 
                             </CardContent>
                         </Card>
                         {/* 3D View - Conditionally render size/visibility */} 
-                        <Card className={`shadow-sm overflow-hidden ${isCanvas3DMinimized ? 'hidden' : (isFloorPlanMinimized ? 'flex-1' : 'h-1/3 min-h-[200px]')}`}> 
-                             <CardHeader className="p-2 border-b flex flex-row items-center justify-between"> {/* Flex header */} 
+                        <Card className={`shadow-sm overflow-hidden transition-all duration-300 ease-in-out ${isCanvas3DMinimized ? 'flex-none h-14' : (isFloorPlanMinimized ? 'flex-1' : 'h-1/3 min-h-[200px]')}`}> 
+                             <CardHeader className="p-2 border-b flex flex-row items-center justify-between h-14"> {/* Fixed header height */} 
                                 <CardTitle className="text-sm font-medium">3D Preview</CardTitle>
-                                 {/* Minimize Button */} 
                                 <Tooltip>
                                     <TooltipTrigger asChild>
+                                        {/* Button toggles state, icon changes based on state */} 
                                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={toggleCanvas3D}>
-                                            <Minimize2 className="h-4 w-4" />
-                                            <span className="sr-only">Minimize 3D View</span>
+                                            {isCanvas3DMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                                            <span className="sr-only">{isCanvas3DMinimized ? 'Maximize' : 'Minimize'} 3D View</span>
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Minimize 3D</TooltipContent>
+                                    <TooltipContent>{isCanvas3DMinimized ? 'Maximize' : 'Minimize'} 3D</TooltipContent>
                                 </Tooltip>
                             </CardHeader>
-                            <CardContent className="p-0 h-full w-full">
+                             {/* Hide content when minimized */} 
+                            <CardContent className={`p-0 h-full w-full ${isCanvas3DMinimized ? 'hidden' : 'block'}`}> 
                                  <Canvas3D />
                             </CardContent>
                         </Card>

@@ -96,8 +96,8 @@ function Model({ item, scaleFactor, room }: ModelProps) {
     // Position relative to the center of the 3D room floor plane
     const position3D: [number, number, number] = [
         (item.x - room.width / 2 + item.width / 2) * scaleFactor, 
-        (-250 / 2 * scaleFactor) + ((item.z ?? 0) * scaleFactor), // Base on floor + Z offset
-        (item.y - room.height / 2 + item.depth / 2) * scaleFactor 
+        (item.z ?? 0) * scaleFactor, 
+        (item.y - room.length / 2 + item.depth / 2) * scaleFactor 
     ];
 
     // Render only if the scene is loaded
@@ -126,61 +126,68 @@ function Model({ item, scaleFactor, room }: ModelProps) {
 // --- Room Component --- 
 const RoomGeometry = () => {
     const { room } = useDesignContext();
-    const wallHeight = 250; // Define a standard wall height (adjust as needed)
-    const scaleFactor = 0.02; // Factor to scale room dimensions for 3D view
+    // Use wallHeight from context, with fallback
+    const wallHeight = room.wallHeight || 250; 
+    const scaleFactor = 0.02;
 
     const scaledWidth = room.width * scaleFactor;
-    const scaledHeight = room.height * scaleFactor;
+    const scaledLength = room.length * scaleFactor; // Use length
+    const scaledWallHeight = wallHeight * scaleFactor;
     
-    // Use memoization to avoid recreating materials on every render
     const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({ 
-        color: room.wallColor,
-        side: THREE.DoubleSide, // Render both sides for visibility
-        roughness: 0.8, 
-        metalness: 0.1 
+        color: room.wallColor, side: THREE.DoubleSide, roughness: 0.8, metalness: 0.1 
     }), [room.wallColor]);
 
     const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ 
-        color: '#d2b48c', // Tan color for floor
-        roughness: 0.9, 
-        metalness: 0 
+        color: '#d2b48c', roughness: 0.9, metalness: 0 
     }), []);
 
     return (
-        <group position={[0, -wallHeight / 2 * scaleFactor, 0]}> {/* Center room vertically */} 
+        <group position={[0, 0, 0]}> {/* Group at floor level */}
             {/* Floor */}
-            <Plane args={[scaledWidth, scaledHeight]} rotation={[-Math.PI / 2, 0, 0]} material={floorMaterial} receiveShadow>
-                {/* <meshStandardMaterial color="#cccccc" side={THREE.DoubleSide}/> */}
-            </Plane>
-            {/* Walls */}
+            <Plane args={[scaledWidth, scaledLength]} rotation={[-Math.PI / 2, 0, 0]} material={floorMaterial} receiveShadow />
             {/* Back Wall */}
-            <Plane args={[scaledWidth, wallHeight * scaleFactor]} position={[0, 0, -scaledHeight / 2]} material={wallMaterial} castShadow receiveShadow />
-             {/* Front Wall (Optional - often omitted for visibility) */}
-             {/* <Plane args={[scaledWidth, wallHeight * scaleFactor]} position={[0, 0, scaledHeight / 2]} rotation={[0, Math.PI, 0]} material={wallMaterial} /> */}
+            <Plane args={[scaledWidth, scaledWallHeight]} position={[0, scaledWallHeight / 2, -scaledLength / 2]} material={wallMaterial} castShadow receiveShadow />
+            {/* Front Wall - Uncommented */}
+            <Plane 
+                args={[scaledWidth, scaledWallHeight]} 
+                position={[0, scaledWallHeight / 2, scaledLength / 2]} // Positioned at the front
+                rotation={[0, Math.PI, 0]} // Rotated to face inwards
+                material={wallMaterial} 
+                castShadow receiveShadow
+            />
             {/* Left Wall */}
-            <Plane args={[scaledHeight, wallHeight * scaleFactor]} position={[-scaledWidth / 2, 0, 0]} rotation={[0, Math.PI / 2, 0]} material={wallMaterial} castShadow receiveShadow />
+            <Plane args={[scaledLength, scaledWallHeight]} position={[-scaledWidth / 2, scaledWallHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]} material={wallMaterial} castShadow receiveShadow />
             {/* Right Wall */}
-            <Plane args={[scaledHeight, wallHeight * scaleFactor]} position={[scaledWidth / 2, 0, 0]} rotation={[0, -Math.PI / 2, 0]} material={wallMaterial} castShadow receiveShadow />
+            <Plane args={[scaledLength, scaledWallHeight]} position={[scaledWidth / 2, scaledWallHeight / 2, 0]} rotation={[0, -Math.PI / 2, 0]} material={wallMaterial} castShadow receiveShadow />
         </group>
     );
 };
 
-// --- Camera Controller (Adjusts based on room size) ---
+// --- Camera Controller (Update to use length) ---
 const CameraController = () => {
   const { camera } = useThree();
   const { room } = useDesignContext();
   const scaleFactor = 0.02;
 
   useEffect(() => {
-    const maxDim = Math.max(room.width * scaleFactor, room.height * scaleFactor, 250 * scaleFactor); // Consider wall height too
-    // Adjust position based on the largest dimension to fit room in view
-    camera.position.set(0, maxDim * 0.75, maxDim * 1.5); 
-    camera.far = maxDim * 5; // Set far plane based on room size
-    camera.lookAt(0, 0, 0); // Look at the center
-    camera.updateProjectionMatrix();
-  }, [camera, room.width, room.height]);
+    const scaledWidth = room.width * scaleFactor;
+    const scaledLength = room.length * scaleFactor; // Use length
+    const scaledWallHeight = (room.wallHeight || 250) * scaleFactor; // Use wallHeight
+    
+    // Base camera position on max horizontal dimension + height
+    const maxHorizontal = Math.max(scaledWidth, scaledLength);
+    const cameraDistance = maxHorizontal * 1.8; // Adjust multiplier as needed
+    const cameraHeight = scaledWallHeight * 1.5; // Position above wall height
 
-  return null; // This component doesn't render anything itself
+    camera.position.set(0, cameraHeight, cameraDistance); 
+    camera.far = cameraDistance * 3; // Adjust far plane based on distance
+    camera.lookAt(0, scaledWallHeight * 0.2 , 0); // Look slightly down towards center of room space
+    camera.updateProjectionMatrix();
+
+  }, [camera, room.width, room.length, room.wallHeight]); // Update dependencies
+
+  return null; 
 };
 
 // --- Main 3D Canvas --- 
@@ -214,16 +221,14 @@ const Canvas3D: React.FC = () => {
                     key={item.id} 
                     item={item} 
                     scaleFactor={scaleFactor}
-                    room={room} // Pass room data
+                    room={room} // Pass updated room object
                 />
             ))}
         </Suspense>
         
         {/* Controls */}
         <OrbitControls 
-            target={[0, 0, 0]} // Ensure controls target the center
-            // enablePan={false} // Optional: disable panning
-            // maxPolarAngle={Math.PI / 2.1} // Optional: Limit vertical rotation
+            target={[0, (room.wallHeight || 250) * scaleFactor * 0.3, 0]} /* Adjust target based on wall height */
         />
 
       </Canvas>

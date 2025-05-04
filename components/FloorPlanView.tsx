@@ -39,7 +39,7 @@ const FurnitureItemMesh: React.FC<FurnitureItemMeshProps> = ({ item, isSelected,
     const position: [number, number, number] = [
         (item.x - room.width / 2) * SCALE_FACTOR,
         0.05, // Slightly above the floor plane to avoid z-fighting
-        (item.y - room.height / 2) * SCALE_FACTOR
+        (item.y - room.length / 2) * SCALE_FACTOR
     ];
     
     const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
@@ -109,8 +109,8 @@ const FloorPlanScene = () => {
     }, [isDragging, draggingItemId, camera, scene, raycaster, room, furniture, dragOffset, updateFurniture]);
 
     const scaledWidth = room.width * SCALE_FACTOR;
-    const scaledHeight = room.height * SCALE_FACTOR;
-    const zoom = Math.min(150 / scaledWidth, 150 / scaledHeight, 1); 
+    const scaledLength = room.length * SCALE_FACTOR;
+    const zoom = Math.min(150 / scaledWidth, 150 / scaledLength, 1); 
 
     // --- Pointer calculation (adjust to work with raw window events) ---
     const updatePointerFromWindowEvent = (event: PointerEvent): THREE.Vector2 => {
@@ -137,7 +137,7 @@ const FloorPlanScene = () => {
             const newX_R3F = intersectionPoint.x - dragOffset.current.x;
             const newZ_R3F = intersectionPoint.z - dragOffset.current.z;
             const newX_Context = (newX_R3F / SCALE_FACTOR) + room.width / 2;
-            const newY_Context = (newZ_R3F / SCALE_FACTOR) + room.height / 2;
+            const newY_Context = (newZ_R3F / SCALE_FACTOR) + room.length / 2;
             // TODO: Boundary checks
             updateFurniture(draggingItemId, { x: newX_Context, y: newY_Context });
         }
@@ -176,7 +176,7 @@ const FloorPlanScene = () => {
         // Ensure room is also available in ref if needed for calculation (it is)
         const currentItemPosR3F = {
              x: currentItemState && stateRef.current.room ? (currentItemState.x - stateRef.current.room.width / 2) * SCALE_FACTOR : 0,
-             z: currentItemState && stateRef.current.room ? (currentItemState.y - stateRef.current.room.height / 2) * SCALE_FACTOR : 0,
+             z: currentItemState && stateRef.current.room ? (currentItemState.y - stateRef.current.room.length / 2) * SCALE_FACTOR : 0,
         };
 
         if (floorIntersection && currentItemState) { 
@@ -212,15 +212,15 @@ const FloorPlanScene = () => {
     // --- Floor Outline Points --- 
     const outlinePoints = useMemo(() => {
         const halfW = scaledWidth / 2;
-        const halfH = scaledHeight / 2;
+        const halfL = scaledLength / 2;
         return [
-            new THREE.Vector3(-halfW, 0.01, -halfH),
-            new THREE.Vector3( halfW, 0.01, -halfH),
-            new THREE.Vector3( halfW, 0.01,  halfH),
-            new THREE.Vector3(-halfW, 0.01,  halfH),
-            new THREE.Vector3(-halfW, 0.01, -halfH), // Close the loop
+            new THREE.Vector3(-halfW, 0.01, -halfL),
+            new THREE.Vector3( halfW, 0.01, -halfL),
+            new THREE.Vector3( halfW, 0.01,  halfL),
+            new THREE.Vector3(-halfW, 0.01,  halfL),
+            new THREE.Vector3(-halfW, 0.01, -halfL), // Close the loop
         ];
-    }, [scaledWidth, scaledHeight]);
+    }, [scaledWidth, scaledLength]);
 
     return (
         <> {/* Use Fragment to avoid adding extra DOM elements */} 
@@ -230,7 +230,7 @@ const FloorPlanScene = () => {
 
             <Grid 
                 position={[0, 0, 0]}
-                args={[scaledWidth, scaledHeight]} 
+                args={[scaledWidth, scaledLength]} 
                 cellSize={GRID_SPACING * SCALE_FACTOR}
                 cellThickness={0.5}
                 cellColor={new THREE.Color('#cccccc')}
@@ -253,7 +253,7 @@ const FloorPlanScene = () => {
             {/* Raycasting Plane */}
             <Plane 
                 ref={floorPlaneRef}
-                args={[scaledWidth * 1.1, scaledHeight * 1.1]} 
+                args={[scaledWidth * 1.1, scaledLength * 1.1]} 
                 rotation={[-Math.PI / 2, 0, 0]}
                 position={[0, -0.01, 0]} 
                 visible={false}

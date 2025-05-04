@@ -5,8 +5,9 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 // Define the shapes of our data
 export interface RoomData {
   width: number;
-  height: number;
-  wallColor: string; // Add wall color
+  length: number; // Renamed from height
+  wallColor: string;
+  wallHeight: number; // Add wall height
 }
 
 // Model interface from DB (can reuse or define separately)
@@ -42,6 +43,14 @@ export interface DesignState {
   selectedItemId: string | null; // Add selected item ID
 }
 
+// --- Default State --- 
+const DEFAULT_ROOM: RoomData = { 
+    width: 800, 
+    length: 600, // Renamed from height
+    wallColor: '#f0f0f0', 
+    wallHeight: 250 // Default wall height
+};
+
 // Define the context value type including setters
 interface DesignContextType extends DesignState {
   setRoom: (room: Partial<RoomData>) => void; // Allow partial updates for color
@@ -64,7 +73,7 @@ interface DesignProviderProps {
 }
 
 export const DesignProvider: React.FC<DesignProviderProps> = ({ children }) => {
-  const [room, setRoomState] = useState<RoomData>({ width: 800, height: 600, wallColor: '#f0f0f0' }); // Default room with initial wall color
+  const [room, setRoomState] = useState<RoomData>(DEFAULT_ROOM);
   const [furniture, setFurniture] = useState<FurnitureItem[]>([]);
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]); // State for models
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null); // Selection state
@@ -91,7 +100,18 @@ export const DesignProvider: React.FC<DesignProviderProps> = ({ children }) => {
 
   // Update setRoom to handle partial updates
   const setRoom = (updates: Partial<RoomData>) => {
-    setRoomState(prev => ({ ...prev, ...updates }));
+    // Validate numeric fields if provided
+    const validatedUpdates: Partial<RoomData> = { ...updates };
+    if (updates.width !== undefined && (isNaN(updates.width) || updates.width <= 0)) {
+        delete validatedUpdates.width; // Ignore invalid width
+    }
+    if (updates.length !== undefined && (isNaN(updates.length) || updates.length <= 0)) {
+        delete validatedUpdates.length; // Ignore invalid length
+    }
+    if (updates.wallHeight !== undefined && (isNaN(updates.wallHeight) || updates.wallHeight <= 0)) {
+        delete validatedUpdates.wallHeight; // Ignore invalid wallHeight
+    }
+    setRoomState(prev => ({ ...prev, ...validatedUpdates }));
   };
 
   const addFurniture = (item: Omit<FurnitureItem, 'id' | 'width' | 'depth' | 'height' | 'normalizedScale'>) => {
@@ -134,11 +154,12 @@ export const DesignProvider: React.FC<DesignProviderProps> = ({ children }) => {
   };
 
   const loadDesign = (state: Omit<DesignState, 'availableModels' | 'selectedItemId'>) => {
-    // Use defaults if properties are missing in loaded state
+    // Load with defaults for all fields
     const loadedRoomData = {
-      width: state.room?.width ?? 800,
-      height: state.room?.height ?? 600,
-      wallColor: state.room?.wallColor ?? '#f0f0f0',
+      width: state.room?.width ?? DEFAULT_ROOM.width,
+      length: state.room?.length ?? DEFAULT_ROOM.length, // Use length
+      wallColor: state.room?.wallColor ?? DEFAULT_ROOM.wallColor,
+      wallHeight: state.room?.wallHeight ?? DEFAULT_ROOM.wallHeight, // Load wallHeight
     };
     setRoomState(loadedRoomData);
     setFurniture(state.furniture ?? []);
@@ -146,10 +167,10 @@ export const DesignProvider: React.FC<DesignProviderProps> = ({ children }) => {
   };
 
   const resetDesign = () => {
-    setRoomState({ width: 800, height: 600, wallColor: '#f0f0f0' });
-    setFurniture([]);
-    setSelectedItemId(null);
-    console.log('Design context reset to defaults.');
+      setRoomState(DEFAULT_ROOM); // Reset using the default object
+      setFurniture([]);
+      setSelectedItemId(null);
+      console.log('Design context reset to defaults.');
   };
 
   const value = {
