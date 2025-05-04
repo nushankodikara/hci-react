@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google"; // Recommended font for shadcn/ui
+// import { Geist_Sans } from "geist/font/sans";
+// import { Geist_Mono } from "geist/font/mono";
 import "./globals.css";
 import { DesignProvider } from "@/context/DesignContext";
+import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Setup font
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" }); // Define font variable
 
 export const metadata: Metadata = {
-  title: "Furniture Design App",
-  description: "Visualize furniture layouts",
+  title: "Room Designer Pro", // Updated Title
+  description: "Visualize and design your room layouts", // Updated Description
 };
 
 export default function RootLayout({
@@ -24,16 +20,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // Add suppressHydrationWarning for next-themes
+    <html lang="en" suppressHydrationWarning> 
       <head>
-      <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+         {/* Removed Tailwind CDN script */}
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <DesignProvider>
-          {children}
-        </DesignProvider>
+      {/* Apply font variable to body */}
+      <body className={inter.variable}> 
+        {/* Wrap everything in ThemeProvider */}
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+          {/* DesignProvider wraps the main application content */}
+          <DesignProvider>
+            {children}
+          </DesignProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

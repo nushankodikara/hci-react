@@ -6,7 +6,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 export interface RoomData {
   width: number;
   height: number;
-  // Add shape, color later
+  wallColor: string; // Add wall color
 }
 
 // Model interface from DB (can reuse or define separately)
@@ -19,18 +19,18 @@ export interface AvailableModel {
 // Exporting FurnitureItem
 export interface FurnitureItem {
   id: string; 
-  // type: 'chair' | 'table'; // Replaced by modelPath
   modelPath: string; // Path to the GLTF/GLB file (relative to /public)
   modelName?: string; // Optional: store name for display
-  x: number;
-  y: number; // 2D position on the floor plan
-  width: number;
-  height: number;
-  z?: number; // Optional: 3D vertical position offset
-  scale?: number; // Optional: Uniform scaling
-  // width: number; // Dimensions might come from model bounds later
-  // height: number;
-  color?: string; // Can be used for tinting or default if model lacks materials
+  x: number; // Position on 2D canvas (top-left)
+  y: number; // Position on 2D canvas (top-left)
+  // Dimensions below are calculated from the 3D model's bounding box
+  width: number; // Footprint width (X-axis in 3D)
+  depth: number; // Footprint depth (Z-axis in 3D) - Used as height in 2D
+  height?: number; // Optional: Actual 3D height
+  normalizedScale?: number; // Scale factor applied in 3D for consistent size
+  z?: number; // 3D vertical position offset (relative to floor)
+  scale?: number; // User-defined scale multiplier (applied on top of normalizedScale)
+  color?: string; // Tint/fallback color
   rotationY?: number; // Rotation around vertical axis
 }
 
@@ -39,16 +39,20 @@ export interface DesignState {
   room: RoomData;
   furniture: FurnitureItem[];
   availableModels: AvailableModel[]; // Add available models list
+  selectedItemId: string | null; // Add selected item ID
 }
 
 // Define the context value type including setters
 interface DesignContextType extends DesignState {
-  setRoom: (room: RoomData) => void;
-  addFurniture: (item: Omit<FurnitureItem, 'id' | 'width' | 'height'> & { width?: number, height?: number }) => void;
+  setRoom: (room: Partial<RoomData>) => void; // Allow partial updates for color
+  addFurniture: (item: Omit<FurnitureItem, 'id' | 'width' | 'depth' | 'height' | 'normalizedScale'>) => void; // Remove calculated fields from input
   updateFurniture: (id: string, updates: Partial<FurnitureItem>) => void;
   removeFurniture: (id: string) => void;
-  loadDesign: (state: Omit<DesignState, 'availableModels'>) => void; // Don't load models list
+  updateFurnitureDimensions: (id: string, dimensions: { width: number, depth: number, height: number, normalizedScale: number }) => void; // New function
+  loadDesign: (state: Omit<DesignState, 'availableModels' | 'selectedItemId'>) => void; // Don't load models list
   fetchAvailableModels: () => Promise<void>; // Action to fetch models
+  setSelectedItemId: (id: string | null) => void; // Add setter for selection
+  resetDesign: () => void; // Add reset function type
 }
 
 // Create the context
@@ -60,9 +64,10 @@ interface DesignProviderProps {
 }
 
 export const DesignProvider: React.FC<DesignProviderProps> = ({ children }) => {
-  const [room, setRoom] = useState<RoomData>({ width: 800, height: 600 }); // Default room
+  const [room, setRoomState] = useState<RoomData>({ width: 800, height: 600, wallColor: '#f0f0f0' }); // Default room with initial wall color
   const [furniture, setFurniture] = useState<FurnitureItem[]>([]);
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]); // State for models
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null); // Selection state
 
   // Fetch models on initial load
   const fetchAvailableModels = useCallback(async () => {
@@ -84,15 +89,22 @@ export const DesignProvider: React.FC<DesignProviderProps> = ({ children }) => {
     fetchAvailableModels();
   }, [fetchAvailableModels]);
 
-  const addFurniture = (item: Omit<FurnitureItem, 'id' | 'width' | 'height'> & { width?: number, height?: number }) => {
+  // Update setRoom to handle partial updates
+  const setRoom = (updates: Partial<RoomData>) => {
+    setRoomState(prev => ({ ...prev, ...updates }));
+  };
+
+  const addFurniture = (item: Omit<FurnitureItem, 'id' | 'width' | 'depth' | 'height' | 'normalizedScale'>) => {
     const newItem: FurnitureItem = {
       id: crypto.randomUUID(),
-      width: item.width ?? 50,
-      height: item.height ?? 50,
+      // Set initial placeholder dimensions - these will be updated once the model loads
+      width: 50, // Placeholder width
+      depth: 50, // Placeholder depth
       ...item,
       scale: item.scale ?? 1,
       rotationY: item.rotationY ?? 0,
       z: item.z ?? 0, 
+      normalizedScale: 1, // Default normalized scale before calculation
     };
     setFurniture((prev) => [...prev, newItem]);
   };
@@ -103,26 +115,57 @@ export const DesignProvider: React.FC<DesignProviderProps> = ({ children }) => {
     );
   };
 
-  const removeFurniture = (id: string) => {
-    setFurniture((prev) => prev.filter((item) => item.id !== id));
+  // New function to specifically update calculated dimensions and scale
+  const updateFurnitureDimensions = (id: string, dimensions: { width: number, depth: number, height: number, normalizedScale: number }) => {
+    setFurniture((prev) =>
+        prev.map((item) => 
+            item.id === id 
+            ? { ...item, ...dimensions } // Overwrite placeholders with calculated values
+            : item
+        )
+    );
   };
 
-  const loadDesign = (state: Omit<DesignState, 'availableModels'>) => {
-    setRoom(state.room);
-    setFurniture(state.furniture);
-    // Don't overwrite availableModels fetched from API
+  const removeFurniture = (id: string) => {
+    setFurniture((prev) => prev.filter((item) => item.id !== id));
+    if (selectedItemId === id) {
+        setSelectedItemId(null);
+    }
+  };
+
+  const loadDesign = (state: Omit<DesignState, 'availableModels' | 'selectedItemId'>) => {
+    // Use defaults if properties are missing in loaded state
+    const loadedRoomData = {
+      width: state.room?.width ?? 800,
+      height: state.room?.height ?? 600,
+      wallColor: state.room?.wallColor ?? '#f0f0f0',
+    };
+    setRoomState(loadedRoomData);
+    setFurniture(state.furniture ?? []);
+    setSelectedItemId(null);
+  };
+
+  const resetDesign = () => {
+    setRoomState({ width: 800, height: 600, wallColor: '#f0f0f0' });
+    setFurniture([]);
+    setSelectedItemId(null);
+    console.log('Design context reset to defaults.');
   };
 
   const value = {
     room,
     furniture,
-    availableModels, // Expose available models
+    availableModels,
     setRoom,
     addFurniture,
     updateFurniture,
     removeFurniture,
+    updateFurnitureDimensions,
     loadDesign,
-    fetchAvailableModels, // Expose fetch function
+    fetchAvailableModels,
+    selectedItemId,
+    setSelectedItemId,
+    resetDesign,
   };
 
   return (
