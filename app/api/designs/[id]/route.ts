@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDesignById, deleteDesign, Design as DbDesign } from '@/lib/db'; // Import the DB type
+import { getDesignById, deleteDesign } from '@/lib/db';
 
-// ... interface RouteParams ...
+// Define RouteParams interface locally
+interface RouteParams {
+    params: { id: string };
+}
 
 // GET - Fetch a specific design by ID
 export async function GET(req: NextRequest, { params }: RouteParams) {
@@ -12,7 +15,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     }
 
     try {
-        const designFromDb: DbDesign | null = await getDesignById(id);
+        const designFromDb = await getDesignById(id);
         if (!designFromDb) {
             return NextResponse.json({ error: 'Design not found' }, { status: 404 });
         }
@@ -34,12 +37,29 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
             console.error(`Error parsing stored JSON for design ID ${id}`);
              return NextResponse.json({ error: 'Failed to parse stored design data' }, { status: 500 });
          }
+        console.error(`Failed to fetch design ID ${id}:`, error);
         return NextResponse.json({ error: 'Failed to fetch design' }, { status: 500 });
     }
 }
 
 // DELETE - Delete a specific design by ID
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
-    // ... existing delete logic ...
+    // TODO: Add authentication/authorization check here
+    
+    const id = parseInt(params.id, 10);
+    if (isNaN(id)) {
+        return NextResponse.json({ error: 'Invalid design ID' }, { status: 400 });
+    }
+
+    try {
+        await deleteDesign(id); // Call the DB function
+        
+        // *** Explicitly return success response after successful deletion ***
+        return new NextResponse(null, { status: 204 }); // 204 No Content
+
+    } catch (error: any) {
+        console.error(`Error deleting design ID ${id}:`, error);
+        return NextResponse.json({ error: 'Failed to delete design', details: error.message }, { status: 500 });
+    }
 }
  
