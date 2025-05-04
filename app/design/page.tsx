@@ -33,7 +33,8 @@ import {
     Plus, Minus, RotateCw, Scale, X, FileWarning, List, Download, 
     PackagePlus, Eraser, Construction, Undo, Redo, /* Add more as needed */
     PanelLeft, PanelRight, // For potentially toggling sidebars
-    Home // For linking back to dashboard
+    Home, // For linking back to dashboard
+    Minimize2, Maximize2, // Icons for pane controls
 } from 'lucide-react';
 
 export default function DesignPage() {
@@ -59,6 +60,10 @@ export default function DesignPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     // Note: Load functionality might live primarily on the dashboard now
+
+    // State for pane visibility
+    const [isFloorPlanMinimized, setIsFloorPlanMinimized] = useState(false);
+    const [isCanvas3DMinimized, setIsCanvas3DMinimized] = useState(false);
 
     const router = useRouter();
 
@@ -162,6 +167,25 @@ export default function DesignPage() {
     const handleLogout = async () => {
         // ... (Logout logic - maybe move to a dedicated auth hook/component)
         try { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/login'); router.refresh(); } catch (e) { console.error(e); /* Show error */ }
+    };
+
+    // Handlers for toggling panes
+    const toggleFloorPlan = () => {
+        const minimizing = !isFloorPlanMinimized;
+        setIsFloorPlanMinimized(minimizing);
+        // If minimizing floor plan, ensure 3D is maximized
+        if (minimizing) {
+            setIsCanvas3DMinimized(false);
+        }
+    };
+
+    const toggleCanvas3D = () => {
+        const minimizing = !isCanvas3DMinimized;
+        setIsCanvas3DMinimized(minimizing);
+        // If minimizing 3D, ensure floor plan is maximized
+        if (minimizing) {
+            setIsFloorPlanMinimized(false);
+        }
     };
 
     if (!isAuthenticated) {
@@ -288,21 +312,41 @@ export default function DesignPage() {
                         </ScrollArea>
                     </aside>
 
-                    {/* --- Center Area --- */}
+                    {/* --- Center Area --- Adjusted for collapsible panes */}
                     <main className="flex-1 flex flex-col p-4 space-y-4 bg-muted/30 overflow-auto">
-                        {/* 2D View */} 
-                        <Card className="flex-1 shadow-sm overflow-hidden min-h-[300px]"> {/* Ensure minimum height */} 
-                            <CardHeader className="p-2 border-b">
+                        {/* 2D View - Conditionally render size/visibility */} 
+                        <Card className={`shadow-sm overflow-hidden ${isFloorPlanMinimized ? 'hidden' : (isCanvas3DMinimized ? 'flex-1' : 'flex-1 min-h-[300px]')}`}> 
+                            <CardHeader className="p-2 border-b flex flex-row items-center justify-between"> {/* Flex header */} 
                                 <CardTitle className="text-sm font-medium">2D Floor Plan</CardTitle>
+                                {/* Minimize Button */} 
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={toggleFloorPlan}>
+                                            <Minimize2 className="h-4 w-4" />
+                                            <span className="sr-only">Minimize 2D View</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Minimize 2D</TooltipContent>
+                                </Tooltip>
                             </CardHeader>
-                            <CardContent className="p-0 h-full w-full relative"> {/* Relative for potential overlays */} 
+                            <CardContent className="p-0 h-full w-full relative">
                                 <FloorPlanView /> 
                             </CardContent>
                         </Card>
-                        {/* 3D View */} 
-                        <Card className="h-1/3 shadow-sm overflow-hidden min-h-[200px]"> {/* Ensure minimum height */} 
-                             <CardHeader className="p-2 border-b">
+                        {/* 3D View - Conditionally render size/visibility */} 
+                        <Card className={`shadow-sm overflow-hidden ${isCanvas3DMinimized ? 'hidden' : (isFloorPlanMinimized ? 'flex-1' : 'h-1/3 min-h-[200px]')}`}> 
+                             <CardHeader className="p-2 border-b flex flex-row items-center justify-between"> {/* Flex header */} 
                                 <CardTitle className="text-sm font-medium">3D Preview</CardTitle>
+                                 {/* Minimize Button */} 
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={toggleCanvas3D}>
+                                            <Minimize2 className="h-4 w-4" />
+                                            <span className="sr-only">Minimize 3D View</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Minimize 3D</TooltipContent>
+                                </Tooltip>
                             </CardHeader>
                             <CardContent className="p-0 h-full w-full">
                                  <Canvas3D />
