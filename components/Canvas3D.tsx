@@ -126,40 +126,33 @@ function Model({ item, scaleFactor, room }: ModelProps) {
 // --- Room Component --- 
 const RoomGeometry = () => {
     const { room } = useDesignContext();
-    // Use wallHeight from context, with fallback
     const wallHeight = room.wallHeight || 250; 
     const scaleFactor = 0.02;
-
     const scaledWidth = room.width * scaleFactor;
-    const scaledLength = room.length * scaleFactor; // Use length
+    const scaledLength = room.length * scaleFactor;
     const scaledWallHeight = wallHeight * scaleFactor;
     
+    // Revert wall material side to default (FrontSide)
     const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({ 
-        color: room.wallColor, side: THREE.DoubleSide, roughness: 0.8, metalness: 0.1 
+        color: room.wallColor, 
+        roughness: 0.8, 
+        metalness: 0.1 
     }), [room.wallColor]);
 
+    // Floor material implicitly uses FrontSide (default)
     const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ 
         color: '#d2b48c', roughness: 0.9, metalness: 0 
     }), []);
 
     return (
-        <group position={[0, 0, 0]}> {/* Group at floor level */}
+        <group position={[0, 0, 0]}>
             {/* Floor */}
             <Plane args={[scaledWidth, scaledLength]} rotation={[-Math.PI / 2, 0, 0]} material={floorMaterial} receiveShadow />
-            {/* Back Wall */}
+            {/* Walls */}
             <Plane args={[scaledWidth, scaledWallHeight]} position={[0, scaledWallHeight / 2, -scaledLength / 2]} material={wallMaterial} castShadow receiveShadow />
-            {/* Front Wall - Uncommented */}
-            <Plane 
-                args={[scaledWidth, scaledWallHeight]} 
-                position={[0, scaledWallHeight / 2, scaledLength / 2]} // Positioned at the front
-                rotation={[0, Math.PI, 0]} // Rotated to face inwards
-                material={wallMaterial} 
-                castShadow receiveShadow
-            />
-            {/* Left Wall */}
             <Plane args={[scaledLength, scaledWallHeight]} position={[-scaledWidth / 2, scaledWallHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]} material={wallMaterial} castShadow receiveShadow />
-            {/* Right Wall */}
             <Plane args={[scaledLength, scaledWallHeight]} position={[scaledWidth / 2, scaledWallHeight / 2, 0]} rotation={[0, -Math.PI / 2, 0]} material={wallMaterial} castShadow receiveShadow />
+            <Plane args={[scaledWidth, scaledWallHeight]} position={[0, scaledWallHeight / 2, scaledLength / 2]} rotation={[0, Math.PI, 0]} material={wallMaterial} castShadow receiveShadow/>
         </group>
     );
 };
