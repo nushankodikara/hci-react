@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google"; // Recommended font for shadcn/ui
+// import { Inter } from "next/font/google"; // Recommended font for shadcn/ui
 // import { Geist_Sans } from "geist/font/sans";
 // import { Geist_Mono } from "geist/font/mono";
 import "./globals.css";
@@ -7,7 +7,7 @@ import { DesignProvider } from "@/context/DesignContext";
 import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider
 
 // Setup font
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" }); // Define font variable
+// const inter = Inter({ subsets: ["latin"], variable: "--font-sans" }); // Define font variable
 
 export const metadata: Metadata = {
   title: "Room Designer Pro", // Updated Title
@@ -26,7 +26,7 @@ export default function RootLayout({
          {/* Removed Tailwind CDN script */}
       </head>
       {/* Apply font variable to body */}
-      <body className={inter.variable}> 
+      <body> 
         {/* Wrap everything in ThemeProvider */}
         <ThemeProvider
             attribute="class"
