@@ -106,7 +106,7 @@ export default function LoginPage() {
               )}
             </CardContent>
             <CardFooter className="flex flex-col gap-4"> {/* Use flex-col and gap */}
-              <Button type="submit" disabled={isLoading} className="w-full">
+              <Button type="submit" disabled={isLoading} className="w-full mt-4">
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
