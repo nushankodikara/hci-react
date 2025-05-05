@@ -1,14 +1,14 @@
 # Dockerfile
 # 1. Base Image - Use a standard Node.js image (Debian-based)
-FROM node:20 AS base
+FROM oven/bun:latest AS base
 
 # Set working directory
 WORKDIR /app
 
 # Install dependencies first for layer caching
-COPY package.json package-lock.json* ./
+COPY package.json bun.lockb* ./
 # Use 'npm ci' for clean, reproducible installs based on lock file
-RUN npm ci
+RUN bun install
 
 # 2. Builder Stage - Build the Next.js application
 FROM base AS builder
@@ -19,11 +19,10 @@ COPY . .
 # Build the Next.js application
 # Ensure NEXT_PUBLIC_ variables are available if needed during build
 # ENV NEXT_PUBLIC_API_URL=http://example.com
-RUN npm run build
+RUN bun run build
 
 # 3. Runner Stage - Setup the production environment
-# Use the same base image type for the runner
-FROM node:20 AS runner 
+FROM oven/bun:latest AS runner 
 WORKDIR /app
 
 # Set NODE_ENV to production
@@ -34,18 +33,20 @@ ENV NODE_ENV production
 # RUN adduser --system --uid 1001 nextjs
 # USER nextjs
 
-# Copy necessary files from builder stage
+# Copy necessary files from builder stage for non-standalone execution
 COPY --from=builder /app/public ./public
-# Add --chown flags if using non-root user
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Copy the standard build output
+COPY --from=builder /app/.next ./.next 
+# Copy production node_modules (bun install might handle this, but copying is safer)
+COPY --from=builder /app/node_modules ./node_modules 
+# Copy package.json (needed for bun start)
+COPY --from=builder /app/package.json ./package.json 
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Command to run the application using the Node.js server
-# Requires 'output: "standalone"' in next.config.js
-CMD ["node", "server.js"]
+# Command to run the application using Bun
+CMD ["bun", "start"]
 
 # --- Alternative CMD if NOT using output: "standalone" ---
 # If you are not using the standalone output mode in next.config.js,
