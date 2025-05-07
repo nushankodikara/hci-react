@@ -297,15 +297,15 @@ export default function DesignPage() {
                                     <h3 className="text-sm font-medium mb-3 flex items-center gap-2"><Settings className="h-4 w-4"/> Room Settings</h3>
                                     <div className="space-y-3">
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="roomWidth">Width</Label>
+                                            <Label htmlFor="roomWidth">Width (cm)</Label>
                                             <Input id="roomWidth" type="number" value={localWidth} onChange={(e) => setLocalWidth(e.target.value)} onBlur={handleRoomUpdate} min="100" />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="roomLength">Length</Label>
+                                            <Label htmlFor="roomLength">Length (cm)</Label>
                                             <Input id="roomLength" type="number" value={localLength} onChange={(e) => setLocalLength(e.target.value)} onBlur={handleRoomUpdate} min="100" />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="wallHeight">Wall Height</Label>
+                                            <Label htmlFor="wallHeight">Wall Height (cm)</Label>
                                             <Input id="wallHeight" type="number" value={localWallHeight} onChange={(e) => setLocalWallHeight(e.target.value)} onBlur={handleRoomUpdate} min="50" />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">

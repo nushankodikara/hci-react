@@ -12,7 +12,7 @@ services:
       # and named 'prod.db' because NODE_ENV is 'production'.
       - db_data:/app
       # Mount persistent volume for uploaded models
-      - models_data:/app/public/models
+      - ./public:/app/public
     environment:
       # Ensure Next.js runs in production mode inside the container
       NODE_ENV: production
