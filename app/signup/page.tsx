@@ -1,8 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function SignupPage() {
   const [username, setUsername] = useState('');
@@ -23,8 +36,6 @@ export default function SignupPage() {
         return;
     }
     
-    // Add other client-side validation if needed
-
     setIsLoading(true);
 
     try {
@@ -40,7 +51,6 @@ export default function SignupPage() {
 
       if (res.ok) {
         setSuccessMessage('Account created successfully! Redirecting to login...');
-        // Redirect to login after a short delay
         setTimeout(() => {
              router.push('/login');
         }, 2000); 
@@ -55,90 +65,95 @@ export default function SignupPage() {
     }
   };
 
+  const handleUsernameChange = (e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value);
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value);
+  const handleConfirmPasswordChange = (e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold text-center text-slate-800">Create Designer Account</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-slate-700">
-              Username
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              required
-              disabled={isLoading || !!successMessage}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out disabled:opacity-60"
-              placeholder="Choose a username"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-              Password (min 8 chars)
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={8}
-              disabled={isLoading || !!successMessage}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out disabled:opacity-60"
-              placeholder="Enter password"
-            />
-          </div>
-           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              disabled={isLoading || !!successMessage}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out disabled:opacity-60"
-              placeholder="Confirm password"
-            />
-          </div>
-          {error && (
-            <p className="text-sm text-red-600 text-center font-medium">{error}</p>
-          )}
-           {successMessage && (
-            <p className="text-sm text-green-600 text-center font-medium">{successMessage}</p>
-          )}
-          <div>
-            <button
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 p-4 selection:bg-orange-500 selection:text-white">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-slate-900 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem]\"></div>
+      
+      <Card className="w-full max-w-md shadow-2xl bg-slate-800 border-slate-700 z-10">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold text-slate-50">Create Designer Account</CardTitle>
+          <CardDescription className="text-slate-400">Join our platform to start designing.</CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-slate-400">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                required
+                disabled={isLoading || !!successMessage}
+                value={username}
+                onChange={handleUsernameChange}
+                placeholder="Choose a username"
+                className="bg-slate-700 border-slate-600 text-slate-50 placeholder:text-slate-500 focus:ring-orange-500"
+                autoComplete="username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-slate-400">Password (min 8 chars)</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                minLength={8}
+                disabled={isLoading || !!successMessage}
+                value={password}
+                onChange={handlePasswordChange}
+                placeholder="Enter password"
+                className="bg-slate-700 border-slate-600 text-slate-50 placeholder:text-slate-500 focus:ring-orange-500"
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-slate-400">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                disabled={isLoading || !!successMessage}
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                placeholder="Confirm password"
+                className="bg-slate-700 border-slate-600 text-slate-50 placeholder:text-slate-500 focus:ring-orange-500"
+                autoComplete="new-password"
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-red-500 text-center font-medium">{error}</p>
+            )}
+            {successMessage && (
+              <p className="text-sm text-green-500 text-center font-medium">{successMessage}</p>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4 mt-8">
+            <Button
               type="submit"
               disabled={isLoading || !!successMessage}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed transition duration-150 ease-in-out"
+              className="w-full bg-orange-600 hover:bg-orange-500 text-white focus:ring-orange-500 disabled:opacity-70"
             >
               {isLoading ? (
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 'Sign Up'
               )}
-            </button>
-          </div>
+            </Button>
+            <p className="text-center text-sm text-slate-400">
+              Already have an account?{' '}
+              <Button variant="link" asChild className="p-0 h-auto font-medium text-orange-500 hover:text-orange-400">
+                <Link href="/login">Log in here</Link>
+              </Button>
+            </p>
+          </CardFooter>
         </form>
-        <p className="text-center text-sm text-slate-600">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline">
-                Log in here
-            </Link>
-        </p>
-      </div>
+      </Card>
     </div>
   );
 } 

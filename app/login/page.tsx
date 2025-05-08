@@ -64,17 +64,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-900 p-4 selection:bg-orange-500 selection:text-white">
+      {/* Background Grid */}
+      <div className="absolute inset-0 -z-10 h-full w-full bg-slate-900 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+
       {/* Use Card component for the form container */}
-      <Card className="w-full max-w-md shadow-lg">
+      <Card className="w-full max-w-md shadow-2xl bg-slate-800 border-slate-700 z-10">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Designer Login</CardTitle>
-          <CardDescription>Enter your username and password to access your designs</CardDescription>
+          <CardTitle className="text-2xl font-bold text-slate-50">Designer Login</CardTitle>
+          <CardDescription className="text-slate-400">Enter your username and password to access your designs</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="text-slate-400">Username</Label>
                 <Input
                   id="username"
                   name="username"
@@ -85,10 +88,11 @@ export default function LoginPage() {
                   value={username}
                   onChange={handleUsernameChange}
                   autoComplete="username" // Add autocomplete attribute
+                  className="bg-slate-700 border-slate-600 text-slate-50 placeholder:text-slate-500 focus:ring-orange-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-slate-400">Password</Label>
                 <Input
                   id="password"
                   name="password"
@@ -99,23 +103,24 @@ export default function LoginPage() {
                   value={password}
                   onChange={handlePasswordChange}
                   autoComplete="current-password" // Add autocomplete attribute
+                  className="bg-slate-700 border-slate-600 text-slate-50 placeholder:text-slate-500 focus:ring-orange-500"
                 />
               </div>
               {error && (
-                <p className="text-sm text-red-600 text-center font-medium">{error}</p>
+                <p className="text-sm text-red-500 text-center font-medium">{error}</p>
               )}
             </CardContent>
             <CardFooter className="flex flex-col gap-4"> {/* Use flex-col and gap */}
-              <Button type="submit" disabled={isLoading} className="w-full mt-4">
+              <Button type="submit" disabled={isLoading} className="w-full mt-8 bg-orange-600 hover:bg-orange-500 text-white focus:ring-orange-500">
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   'Log in'
                 )}
               </Button>
-              <p className="text-center text-sm text-slate-600">
+              <p className="text-center text-sm text-slate-400">
                 Don't have an account?{' '}
-                 <Button variant="link" asChild className="p-0 h-auto font-medium text-indigo-600 hover:text-indigo-500">
+                 <Button variant="link" asChild className="p-0 h-auto font-medium text-orange-500 hover:text-orange-400">
                     <Link href="/signup">Sign up here</Link>
                  </Button>
               </p>

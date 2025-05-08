@@ -220,19 +220,32 @@ export default function DesignPage() {
         // Or better, use middleware or a Higher-Order Component for auth protection
         // router.push('/login');
         // return null; // Or a loading spinner
-         return <div>Redirecting to login...</div>; // Placeholder
+         return <div className="flex items-center justify-center h-screen bg-slate-900 text-slate-200">Redirecting to login...</div>; // Placeholder
     }
+
+    const inputStyles = "bg-slate-700 border-slate-600 text-slate-50 placeholder:text-slate-400 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-60";
+    const sidebarHeaderStyles = "text-sm font-semibold mb-3 flex items-center gap-2 text-slate-200";
+    const labelStyles = "text-slate-400 text-xs";
+    const destructiveAlertStyles = "bg-red-900/20 border-red-700/50 text-red-300";
+    const tooltipContentStyles = "bg-slate-700 text-slate-200 border-slate-600";
+    const alertDialogContentStyles = "bg-slate-800 border-slate-700 text-slate-50";
+    const destructiveButtonStyles = "bg-red-600 hover:bg-red-500 text-white focus:ring-red-500";
+    const orangeButtonStyles = "bg-orange-600 hover:bg-orange-500 text-white focus:ring-orange-500 disabled:opacity-70";
+    // const outlineButtonStyles = "border-slate-600 hover:bg-slate-700 text-slate-300 hover:text-slate-100 focus:ring-slate-500";
+    // New orange outline style for header buttons that should have accent
+    const orangeAccentOutlineButtonStyles = "border-orange-600/70 text-orange-400 hover:bg-orange-500/10 hover:text-orange-300 focus:ring-orange-500 focus:ring-offset-slate-800";
+    // Neutral outline style for less prominent actions if needed, or for cancel buttons
+    const neutralOutlineButtonStyles = "border-slate-600 hover:bg-slate-700 text-slate-300 hover:text-slate-100 focus:ring-slate-500 focus:ring-offset-slate-800";
 
     return (
         <TooltipProvider delayDuration={100}>
-            <div className="flex flex-col h-screen bg-background text-foreground">
+            <div className="flex flex-col h-screen bg-slate-900 text-slate-50 selection:bg-orange-500 selection:text-white">
                 {/* --- Top Navigation --- */}
-                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-                    <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-                        <Construction className="h-5 w-5" />
+                <header className="flex h-14 items-center gap-4 border-b border-slate-700 bg-slate-800 px-4 lg:h-[60px] lg:px-6 z-20 sticky top-0">
+                    <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-slate-50 hover:text-orange-400 transition-colors">
+                        <Layout className="h-5 w-5 text-orange-400" />
                         <span className="">Room Designer Pro</span>
                     </Link>
-                    {/* Add other nav items like Save, User menu etc. */}
                      <div className="flex-1">
                         {/* Placeholder for central nav items or breadcrumbs */}
                      </div>
@@ -240,19 +253,19 @@ export default function DesignPage() {
                          {/* Reset Layout Button */} 
                          <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleResetLayout}>
-                                    <Maximize2 className="h-4 w-4" /> {/* Using Maximize icon for reset */} 
+                                <Button variant="outline" size="icon" className={`h-8 w-8 ${orangeAccentOutlineButtonStyles}`} onClick={handleResetLayout}>
+                                    <Layout className="h-4 w-4" />
                                     <span className="sr-only">Reset Layout</span>
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Reset Layout</TooltipContent>
+                            <TooltipContent className={tooltipContentStyles}>Reset Layout</TooltipContent>
                         </Tooltip>
-                        <Separator orientation="vertical" className="h-6" />
+                        <Separator orientation="vertical" className="h-6 bg-slate-700" />
                          {/* Save Input & Button - Simplified for now */}
                          <Input 
                              type="text" 
                              placeholder="Enter design name to save..." 
-                             className="h-8 w-48 text-xs" 
+                             className={`h-8 w-48 text-xs ${inputStyles}`} 
                              value={saveDesignName}
                              onChange={(e) => setSaveDesignName(e.target.value)}
                              disabled={isSaving}
@@ -262,7 +275,7 @@ export default function DesignPage() {
                                 <Button 
                                     variant="outline" 
                                     size="icon" 
-                                    className="h-8 w-8"
+                                    className={`h-8 w-8 ${isSaving || !saveDesignName.trim() ? 'bg-slate-600 text-slate-400' : orangeButtonStyles}`}
                                     onClick={handleSaveDesign}
                                     disabled={isSaving || !saveDesignName.trim()}
                                 >
@@ -270,117 +283,212 @@ export default function DesignPage() {
                                     <span className="sr-only">Save Design</span>
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Save Design</TooltipContent>
+                            <TooltipContent className={tooltipContentStyles}>Save Design</TooltipContent>
                         </Tooltip>
                          {/* Maybe add Load button triggering a Dialog? */}
                          {/* User/Logout Button */}
                          <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleLogout}>
+                                <Button variant="outline" size="icon" className={`h-8 w-8 ${orangeAccentOutlineButtonStyles}`} onClick={handleLogout}>
                                     <LogOut className="h-4 w-4" />
                                     <span className="sr-only">Logout</span>
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Logout</TooltipContent>
+                            <TooltipContent className={tooltipContentStyles}>Logout</TooltipContent>
                         </Tooltip>
                     </div>
                 </header>
 
                 {/* --- Main Content Area (Sidebars + Center) --- */}
                 <div className="flex flex-1 overflow-hidden"> {/* Main area below nav */} 
-                    {/* --- Left Sidebar --- */}
-                    <aside className="w-72 border-r flex flex-col bg-card overflow-scroll">
+                    {/* --- Left Sidebar --- (Now Room Settings & Edit Item) */}
+                    <aside className="w-72 border-r border-slate-700 flex flex-col bg-slate-800 overflow-y-auto">
                         <ScrollArea className="flex-grow p-4">
                             <div className="space-y-6">
-                                {/* Room Settings */}
                                 <section>
-                                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2"><Settings className="h-4 w-4"/> Room Settings</h3>
+                                    <h3 className={sidebarHeaderStyles}><Settings className="h-4 w-4 text-orange-400"/> Room Settings</h3>
                                     <div className="space-y-3">
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="roomWidth">Width (cm)</Label>
-                                            <Input id="roomWidth" type="number" value={localWidth} onChange={(e) => setLocalWidth(e.target.value)} onBlur={handleRoomUpdate} min="100" />
+                                            <Label htmlFor="roomWidth" className={labelStyles}>Width (cm)</Label>
+                                            <Input id="roomWidth" type="number" value={localWidth} onChange={(e) => setLocalWidth(e.target.value)} onBlur={handleRoomUpdate} min="100" className={inputStyles} />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="roomLength">Length (cm)</Label>
-                                            <Input id="roomLength" type="number" value={localLength} onChange={(e) => setLocalLength(e.target.value)} onBlur={handleRoomUpdate} min="100" />
+                                            <Label htmlFor="roomLength" className={labelStyles}>Length (cm)</Label>
+                                            <Input id="roomLength" type="number" value={localLength} onChange={(e) => setLocalLength(e.target.value)} onBlur={handleRoomUpdate} min="100" className={inputStyles} />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="wallHeight">Wall Height (cm)</Label>
-                                            <Input id="wallHeight" type="number" value={localWallHeight} onChange={(e) => setLocalWallHeight(e.target.value)} onBlur={handleRoomUpdate} min="50" />
+                                            <Label htmlFor="wallHeight" className={labelStyles}>Wall Height (cm)</Label>
+                                            <Input id="wallHeight" type="number" value={localWallHeight} onChange={(e) => setLocalWallHeight(e.target.value)} onBlur={handleRoomUpdate} min="50" className={inputStyles} />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="wallColor"><Palette className="h-3 w-3 inline mr-1"/> Wall Color</Label>
-                                            <Input id="wallColor" type="color" value={localWallColor} onChange={handleColorChange} className="h-8 cursor-pointer p-1" />
+                                            <Label htmlFor="wallColor" className={labelStyles}><Palette className="h-3 w-3 inline mr-1 text-orange-400"/> Wall Color</Label>
+                                            <Input id="wallColor" type="color" value={localWallColor} onChange={handleColorChange} className={`h-8 p-0.5 cursor-pointer ${inputStyles}`} />
                                         </div>
                                     </div>
                                 </section>
-                                <Separator />
-                                {/* Upload Model */}
+                                <Separator className="bg-slate-700"/>
+                                {/* Selected Item Editor - MOVED HERE */}
+                                {selectedItem ? (
                                 <section>
-                                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2"><Upload className="h-4 w-4"/> Upload Model</h3>
+                                    <h3 className={sidebarHeaderStyles}><Settings className="h-4 w-4 text-orange-400"/> Edit Item</h3>
+                                    <div className={`space-y-4 rounded-md border border-slate-700 p-3 bg-slate-700/30`}>
+                                        <p className="text-sm font-medium text-slate-100 truncate"> 
+                                            Selected: {selectedItem.modelName || `Item ID: ${typeof selectedItem.id === 'string' ? selectedItem.id.substring(0,6) : selectedItem.id}...`}
+                                        </p>
+                                        <div className="grid w-full items-center gap-1.5">
+                                            <Label htmlFor="itemScale" className={`flex items-center justify-between ${labelStyles}`}>
+                                                <span className="flex items-center gap-1"><Scale className="h-3 w-3 text-orange-400/80"/> Scale</span>
+                                                <span className="text-slate-200">{(selectedItem.scale ?? 1).toFixed(2)}x</span>
+                                            </Label>
+                                            <Slider id="itemScale" min={0.1} max={3.0} step={0.05} value={[selectedItem.scale ?? 1]} onValueChange={handleScaleChange} className="my-2 [&>span:first-child]:bg-orange-500 [&>span:first-child_span]:bg-slate-50"/>
+                                        </div>
+                                        <div className="grid w-full items-center gap-1.5">
+                                            <Label htmlFor="itemRotation" className={`flex items-center justify-between ${labelStyles}`}>
+                                                <span className="flex items-center gap-1"><RotateCw className="h-3 w-3 text-orange-400/80"/> Rotation</span>
+                                                <span className="text-slate-200">{THREE.MathUtils.radToDeg(selectedItem.rotationY ?? 0).toFixed(0)}°</span>
+                                            </Label>
+                                            <Slider id="itemRotation" min={0} max={360} step={1} value={[THREE.MathUtils.radToDeg(selectedItem.rotationY ?? 0)]} onValueChange={handleRotationChange} className="my-2 [&>span:first-child]:bg-orange-500 [&>span:first-child_span]:bg-slate-50"/>
+                                        </div>
+                                        <Separator className="bg-slate-700"/>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="destructive" size="sm" className={`w-full ${destructiveButtonStyles}`}><Eraser className="mr-2 h-4 w-4" /> Delete Item</Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent className={alertDialogContentStyles}>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle className="text-slate-50">Delete Item?</AlertDialogTitle>
+                                                    <AlertDialogDescription className="text-slate-400">
+                                                        Are you sure you want to delete "{selectedItem.modelName || 'this item'}" from the design?
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter className="border-t border-slate-700 pt-4 mt-4">
+                                                    <AlertDialogCancel className={`border-slate-600 hover:bg-slate-700 text-slate-300 ${neutralOutlineButtonStyles}`}>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={handleDeleteSelectedItem} className={destructiveButtonStyles}>Yes, delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
+                                </section>
+                                ) : (
+                                    <div className="text-center text-sm text-slate-500 p-4 pt-10">
+                                        <p>Select an item in the 2D or 3D view to edit its properties.</p>
+                                    </div>
+                                )} 
+                            </div>
+                        </ScrollArea>
+                    </aside>
+
+                    {/* --- Center Area --- Adjusted for collapsible panes */}
+                    <main className="flex-1 flex flex-col p-4 space-y-4 bg-slate-950 overflow-auto">
+                        {/* 2D View - Conditionally render size/visibility */} 
+                        <Card className={`shadow-md overflow-hidden transition-all duration-300 ease-in-out bg-slate-800 border-slate-700 ${isFloorPlanMinimized ? 'flex-none h-14' : (isCanvas3DMinimized ? 'flex-1' : 'flex-1 min-h-[300px]')}`}> 
+                            <CardHeader className="border-b border-slate-700 flex flex-row items-center justify-between h-6"> {/* Fixed header height */} 
+                                <CardTitle className="text-sm font-medium text-slate-200">2D Floor Plan</CardTitle>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        {/* Button toggles state, icon changes based on state */} 
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-100 hover:bg-slate-700" onClick={toggleFloorPlan}>
+                                            {isFloorPlanMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                                            <span className="sr-only">{isFloorPlanMinimized ? 'Maximize' : 'Minimize'} 2D View</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className={tooltipContentStyles}>{isFloorPlanMinimized ? 'Maximize' : 'Minimize'} 2D</TooltipContent>
+                                </Tooltip>
+                            </CardHeader>
+                            {/* Hide content when minimized */} 
+                            <CardContent className={`p-0 h-full w-full relative bg-slate-850 ${isFloorPlanMinimized ? 'hidden' : 'block'}`}> 
+                                <FloorPlanView /> 
+                            </CardContent>
+                        </Card>
+                        {/* 3D View - Conditionally render size/visibility */} 
+                        <Card className={`shadow-md overflow-hidden transition-all duration-300 ease-in-out bg-slate-800 border-slate-700 ${isCanvas3DMinimized ? 'flex-none h-14' : (isFloorPlanMinimized ? 'flex-1' : 'h-1/3 min-h-[200px]')}`}> 
+                             <CardHeader className="border-b border-slate-700 flex flex-row items-center justify-between h-6"> {/* Fixed header height */} 
+                                <CardTitle className="text-sm font-medium text-slate-200">3D Preview</CardTitle>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        {/* Button toggles state, icon changes based on state */} 
+                                         <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-100 hover:bg-slate-700" onClick={toggleCanvas3D}>
+                                            {isCanvas3DMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                                            <span className="sr-only">{isCanvas3DMinimized ? 'Maximize' : 'Minimize'} 3D View</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className={tooltipContentStyles}>{isCanvas3DMinimized ? 'Maximize' : 'Minimize'} 3D</TooltipContent>
+                                </Tooltip>
+                            </CardHeader>
+                             {/* Hide content when minimized */} 
+                            <CardContent className={`p-0 h-full w-full bg-slate-850 ${isCanvas3DMinimized ? 'hidden' : 'block'}`}> 
+                                 <Canvas3D />
+                            </CardContent>
+                        </Card>
+                    </main>
+
+                    {/* --- Right Sidebar --- (Now Upload Model & Add Furniture) */}
+                    <aside className="w-64 border-l border-slate-700 flex flex-col bg-slate-800 overflow-y-auto">
+                        <ScrollArea className="flex-grow p-4">
+                            <div className="space-y-6">
+                                {/* Upload Model - MOVED HERE */} 
+                                <section>
+                                    <h3 className={sidebarHeaderStyles}><Upload className="h-4 w-4 text-orange-400"/> Upload Model</h3>
                                     <div className="space-y-3">
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="modelName">Model Name</Label>
-                                            <Input id="modelName" type="text" value={newModelName} onChange={(e) => setNewModelName(e.target.value)} placeholder="Enter unique name..." disabled={uploading} />
+                                            <Label htmlFor="modelName" className={labelStyles}>Model Name</Label>
+                                            <Input id="modelName" type="text" value={newModelName} onChange={(e) => setNewModelName(e.target.value)} placeholder="Enter unique name..." disabled={uploading} className={inputStyles} />
                                         </div>
                                         <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="modelFile">GLTF/GLB File</Label>
-                                            <Input ref={fileInputRef} id="modelFile" type="file" accept=".gltf,.glb" onChange={handleFileChange} disabled={uploading} className="text-sm file:button-styling..." />
+                                            <Label htmlFor="modelFile" className={labelStyles}>GLTF/GLB File</Label>
+                                            <Input ref={fileInputRef} id="modelFile" type="file" accept=".gltf,.glb" onChange={handleFileChange} disabled={uploading} className={`text-sm ${inputStyles} file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border file:border-slate-500 file:text-xs file:font-semibold file:bg-slate-600 file:text-slate-200 hover:file:bg-slate-500`} />
                                         </div>
-                                        <Button onClick={handleUpload} disabled={uploading || !selectedFile || !newModelName} className="w-full">
+                                        <Button onClick={handleUpload} disabled={uploading || !selectedFile || !newModelName} className={`w-full ${uploading || !selectedFile || !newModelName ? 'bg-slate-600 text-slate-400' : orangeButtonStyles}`}>
                                             {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4"/>} {uploading ? 'Uploading...' : 'Upload Model'}
                                         </Button>
-                                        {uploadError && <Alert variant="destructive" className="mt-2"><FileWarning className="h-4 w-4"/><AlertTitle>Upload Error</AlertTitle><AlertDescription>{uploadError}</AlertDescription></Alert>}
+                                        {uploadError && <Alert variant="destructive" className={`mt-2 ${destructiveAlertStyles}`}><FileWarning className="h-4 w-4"/><AlertTitle className="text-red-200">Upload Error</AlertTitle><AlertDescription>{uploadError}</AlertDescription></Alert>}
                                     </div>
                                 </section>
-                                <Separator />
-                                {/* Add Furniture */}
+                                <Separator className="bg-slate-700" />
+                                {/* Add Furniture - MOVED HERE */} 
                                 <section>
-                                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2"><List className="h-4 w-4"/> Add Furniture</h3>
-                                    {/* Display overall delete error if any */} 
-                                    {deleteModelError && <Alert variant="destructive" className="mb-2 text-xs"><FileWarning className="h-4 w-4"/><AlertTitle>Delete Error</AlertTitle><AlertDescription>{deleteModelError}</AlertDescription></Alert>}
-                                     <ScrollArea className="h-48 w-full rounded-md border p-2">
+                                    <h3 className={sidebarHeaderStyles}><List className="h-4 w-4 text-orange-400"/> Add Furniture</h3>
+                                    {deleteModelError && <Alert variant="destructive" className={`mb-2 text-xs ${destructiveAlertStyles}`}><FileWarning className="h-4 w-4"/><AlertTitle className="text-red-200">Delete Error</AlertTitle><AlertDescription>{deleteModelError}</AlertDescription></Alert>}
+                                     <ScrollArea className="h-48 w-full rounded-md border border-slate-700 p-2 bg-slate-900/30">
                                          {availableModels.length === 0 ? (
-                                            <p className="text-xs text-muted-foreground text-center p-2">No models uploaded</p>
+                                            <p className="text-xs text-slate-500 text-center p-2">No models uploaded</p>
                                         ) : (
                                             <div className="space-y-1">
                                             {availableModels.map((model) => (
-                                                <div key={model.id} className="flex items-center justify-between gap-1 group p-1 rounded hover:bg-muted">
-                                                    {/* Add Button */} 
+                                                <div key={model.id} className="flex items-center justify-between gap-1 group p-1 rounded hover:bg-slate-700/70">
                                                     <Button 
                                                         onClick={() => handleAddFurniture(model)} 
                                                         variant="ghost" 
-                                                        className="flex-grow justify-start text-left h-8 px-2" // Adjust padding/height
+                                                        className="flex-grow justify-start text-left h-8 px-2 text-slate-300 hover:text-slate-100 hover:bg-transparent"
                                                     >
-                                                        <PackagePlus className="mr-2 h-4 w-4 flex-shrink-0"/>
-                                                        <span className="truncate">{model.name}</span>
+                                                        <PackagePlus className="mr-2 h-4 w-4 flex-shrink-0 text-orange-400/80"/>
+                                                        <span className="truncate text-sm">{model.name}</span>
                                                     </Button>
-                                                    {/* Delete Button - Conditionally visible or always visible */} 
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
                                                             <Button 
                                                                 variant="ghost" 
                                                                 size="icon" 
-                                                                className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" // Style for subtle delete
-                                                                disabled={isDeletingModel === model.id} // Disable while deleting this specific model
+                                                                className="h-7 w-7 text-slate-500 hover:text-red-500 opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                                                disabled={isDeletingModel === model.id}
                                                             >
-                                                                {isDeletingModel === model.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                                                {isDeletingModel === model.id ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> : <Trash2 className="h-4 w-4" />}
                                                                 <span className="sr-only">Delete {model.name}</span>
                                                             </Button>
                                                         </AlertDialogTrigger>
-                                                        <AlertDialogContent>
+                                                        <AlertDialogContent className={alertDialogContentStyles}>
                                                             <AlertDialogHeader>
-                                                                <AlertDialogTitle>Delete Model?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
+                                                                <AlertDialogTitle className="text-slate-50">Delete Model?</AlertDialogTitle>
+                                                                <AlertDialogDescription className="text-slate-400">
                                                                     This will permanently delete the model "{model.name}" from the library.
                                                                     This action cannot be undone. Furniture using this model in saved designs might not render correctly.
                                                                 </AlertDialogDescription>
                                                             </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogFooter className="border-t border-slate-700 pt-4 mt-4">
+                                                                <AlertDialogCancel className={`border-slate-600 hover:bg-slate-700 text-slate-300 ${neutralOutlineButtonStyles}`}>Cancel</AlertDialogCancel>
                                                                 <AlertDialogAction 
                                                                     onClick={() => handleDeleteModel(model.id)} 
-                                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                    className={destructiveButtonStyles}
                                                                 >
                                                                     Yes, delete model
                                                                 </AlertDialogAction>
@@ -393,95 +501,12 @@ export default function DesignPage() {
                                         )}
                                     </ScrollArea>
                                 </section>
-                            </div>
-                        </ScrollArea>
-                    </aside>
-
-                    {/* --- Center Area --- Adjusted for collapsible panes */}
-                    <main className="flex-1 flex flex-col p-4 space-y-4 bg-muted/30 overflow-auto">
-                        {/* 2D View - Conditionally render size/visibility */} 
-                        <Card className={`shadow-sm overflow-hidden transition-all duration-300 ease-in-out ${isFloorPlanMinimized ? 'flex-none h-14' : (isCanvas3DMinimized ? 'flex-1' : 'flex-1 min-h-[300px]')}`}> 
-                            <CardHeader className="p-2 border-b flex flex-row items-center justify-between h-14"> {/* Fixed header height */} 
-                                <CardTitle className="text-sm font-medium">2D Floor Plan</CardTitle>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        {/* Button toggles state, icon changes based on state */} 
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={toggleFloorPlan}>
-                                            {isFloorPlanMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-                                            <span className="sr-only">{isFloorPlanMinimized ? 'Maximize' : 'Minimize'} 2D View</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>{isFloorPlanMinimized ? 'Maximize' : 'Minimize'} 2D</TooltipContent>
-                                </Tooltip>
-                            </CardHeader>
-                            {/* Hide content when minimized */} 
-                            <CardContent className={`p-0 h-full w-full relative ${isFloorPlanMinimized ? 'hidden' : 'block'}`}> 
-                                <FloorPlanView /> 
-                            </CardContent>
-                        </Card>
-                        {/* 3D View - Conditionally render size/visibility */} 
-                        <Card className={`shadow-sm overflow-hidden transition-all duration-300 ease-in-out ${isCanvas3DMinimized ? 'flex-none h-14' : (isFloorPlanMinimized ? 'flex-1' : 'h-1/3 min-h-[200px]')}`}> 
-                             <CardHeader className="p-2 border-b flex flex-row items-center justify-between h-14"> {/* Fixed header height */} 
-                                <CardTitle className="text-sm font-medium">3D Preview</CardTitle>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        {/* Button toggles state, icon changes based on state */} 
-                                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={toggleCanvas3D}>
-                                            {isCanvas3DMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-                                            <span className="sr-only">{isCanvas3DMinimized ? 'Maximize' : 'Minimize'} 3D View</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>{isCanvas3DMinimized ? 'Maximize' : 'Minimize'} 3D</TooltipContent>
-                                </Tooltip>
-                            </CardHeader>
-                             {/* Hide content when minimized */} 
-                            <CardContent className={`p-0 h-full w-full ${isCanvas3DMinimized ? 'hidden' : 'block'}`}> 
-                                 <Canvas3D />
-                            </CardContent>
-                        </Card>
-                    </main>
-
-                    {/* --- Right Sidebar --- */}
-                    <aside className="w-64 border-l flex flex-col bg-card overflow-hidden">
-                        <ScrollArea className="flex-grow p-4">
-                            <div className="space-y-6">
-                                {/* Selected Item Editor */}
-                                {selectedItem ? (
-                                <section>
-                                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2"><Settings className="h-4 w-4"/> Edit Item</h3>
-                                    <div className="space-y-4 rounded-md border p-3">
-                                        <p className="text-sm font-medium text-foreground truncate"> 
-                                            Selected: {selectedItem.modelName || `Item ID: ${selectedItem.id.substring(0,6)}...`}
-                                        </p>
-                                        {/* Scale */} 
-                                        <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="itemScale" className="flex items-center justify-between text-xs">
-                                                <span className="flex items-center gap-1"><Scale className="h-3 w-3"/> Scale</span>
-                                                <span>{(selectedItem.scale ?? 1).toFixed(2)}x</span>
-                                            </Label>
-                                            <Slider id="itemScale" min={0.1} max={3.0} step={0.05} value={[selectedItem.scale ?? 1]} onValueChange={handleScaleChange} className="my-2"/>
-                                        </div>
-                                        {/* Rotation */} 
-                                        <div className="grid w-full items-center gap-1.5">
-                                            <Label htmlFor="itemRotation" className="flex items-center justify-between text-xs">
-                                                <span className="flex items-center gap-1"><RotateCw className="h-3 w-3"/> Rotation</span>
-                                                <span>{THREE.MathUtils.radToDeg(selectedItem.rotationY ?? 0).toFixed(0)}°</span>
-                                            </Label>
-                                            <Slider id="itemRotation" min={0} max={360} step={1} value={[THREE.MathUtils.radToDeg(selectedItem.rotationY ?? 0)]} onValueChange={handleRotationChange} className="my-2"/>
-                                        </div>
-                                        <Separator/>
-                                        {/* Delete */} 
-                                        <Button onClick={handleDeleteSelectedItem} variant="destructive" size="sm" className="w-full">
-                                            <Eraser className="mr-2 h-4 w-4" /> Delete Item
-                                        </Button>
+                                {/* Placeholder if right sidebar becomes empty otherwise */}
+                                { !selectedItem && availableModels.length === 0 && (
+                                    <div className="text-center text-sm text-slate-500 p-4 pt-10">
+                                        <p>Upload models or select items to add to your design.</p>
                                     </div>
-                                </section>
-                                ) : (
-                                    <div className="text-center text-sm text-muted-foreground p-4 pt-10">
-                                        <p>Select an item in the 2D or 3D view to edit its properties.</p>
-                                    </div>
-                                )} 
-                                {/* Add other right-sidebar sections here later if needed */}
+                                )}
                             </div>
                         </ScrollArea>
                     </aside>
