@@ -244,7 +244,7 @@ export default function DesignPage() {
                 <header className="flex h-14 items-center gap-4 border-b border-slate-700 bg-slate-800 px-4 lg:h-[60px] lg:px-6 z-20 sticky top-0">
                     <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-slate-50 hover:text-orange-400 transition-colors">
                         <Layout className="h-5 w-5 text-orange-400" />
-                        <span className="">Room Designer Pro</span>
+                        <span className="">Room Planner</span>
                     </Link>
                      <div className="flex-1">
                         {/* Placeholder for central nav items or breadcrumbs */}
@@ -544,7 +544,7 @@ export default function DesignPage() {
                                     <div className="text-center text-sm text-slate-500 p-4 pt-10">
                                         <p>Upload models or select items to add to your design.</p>
                                     </div>
-                                )}
+                                )} 
                             </div>
                         </ScrollArea>
                     </aside>

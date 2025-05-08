@@ -10,7 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProv
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" }); // Define font variable
 
 export const metadata: Metadata = {
-  title: "Room Designer Pro", // Updated Title
+  title: "Room Planner", // Updated Title
   description: "Visualize and design your room layouts", // Updated Description
 };
 
