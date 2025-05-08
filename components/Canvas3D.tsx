@@ -18,14 +18,69 @@ const MIN_FOOTPRINT_DIMENSION_2D = 1.0; // Minimum width/depth for 2D representa
 
 function Model({ item, scaleFactor, room }: ModelProps) {
     const { scene } = useGLTF(item.modelPath);
-    const { updateFurnitureDimensions } = useDesignContext();
+    const { updateFurnitureDimensions, updateFurniture } = useDesignContext();
     const calculationDone = useRef(false);
-    const modelGroupRef = useRef<THREE.Group>(null); // Use a separate ref for the group applying transforms
-    const loadedSceneRef = useRef<THREE.Group | null>(null); // Ref for the actual loaded scene object
+    const modelGroupRef = useRef<THREE.Group>(null);
+    const loadedSceneRef = useRef<THREE.Group | null>(null);
 
     useEffect(() => {
-        loadedSceneRef.current = scene.clone(); // Clone scene on load
-    }, [scene]);
+        const cloned = scene.clone();
+        loadedSceneRef.current = cloned;
+        // Initial color setup when model (scene) changes or HSL values are first defined
+        // This attempts to set the originalColorHex if not already set.
+        if (cloned && !item.originalColorHex && (item.hue !== undefined || item.saturation !== undefined || item.lightness !== undefined)) {
+            let initialColorSet = false;
+            cloned.traverse((child) => {
+                if (!initialColorSet && child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+                    const originalColor = child.material.color.getHexString();
+                    updateFurniture(item.id, { originalColorHex: `#${originalColor}` });
+                    initialColorSet = true; // Set for the first material found
+                }
+            });
+        }
+    }, [scene, item.id, updateFurniture]); // Depend on scene to re-clone if modelPath changes
+
+    // Effect for HSL adjustments
+    useEffect(() => {
+        if (loadedSceneRef.current && (item.hue !== undefined || item.saturation !== undefined || item.lightness !== undefined)) {
+            const sceneToUpdate = loadedSceneRef.current;
+            sceneToUpdate.traverse((child) => {
+                if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+                    const material = child.material as THREE.MeshStandardMaterial; // Type assertion
+                    let baseColor = new THREE.Color();
+
+                    if (item.originalColorHex) {
+                        try {
+                            baseColor.set(item.originalColorHex);
+                        } catch (e) {
+                            console.warn("Invalid originalColorHex, defaulting to material color or white", e);
+                            baseColor.copy(material.color); // Fallback to current material color
+                        }
+                    } else {
+                        // If originalColorHex is still not set (e.g., first adjustment before context update completes)
+                        // For safety, clone the material's current color to avoid direct mutation before original is stored.
+                        baseColor.copy(material.color);
+                        // Attempt to store it now, but this might be slightly racy if many updates happen fast.
+                        // The earlier effect is better for initial storage.
+                        if (!item.originalColorHex) { // Double check
+                             updateFurniture(item.id, { originalColorHex: `#${material.color.getHexString()}` });
+                        }
+                    }
+
+                    const h = (item.hue ?? 0) / 360;
+                    const s = item.saturation ?? 1.0; // Default to full saturation if undefined
+                    const l = item.lightness ?? 0.5; // Default to mid lightness if undefined
+                    
+                    const newColor = new THREE.Color();
+                    newColor.copy(baseColor); // Start from base
+                    newColor.setHSL(h, s, l);
+                    
+                    material.color.set(newColor);
+                    // material.needsUpdate = true; // Often not needed with R3F state driving re-renders
+                }
+            });
+        }
+    }, [item.hue, item.saturation, item.lightness, item.originalColorHex, item.id, updateFurniture]); // Re-run if HSL or originalColorHex changes
 
     useEffect(() => {
         // Check if scene is cloned, ref exists, calculation not done, and dimensions are placeholders

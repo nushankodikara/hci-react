@@ -26,8 +26,13 @@ interface FurnitureItem {
   modelPath?: string; // Path to the GLB/GLTF model
   scale?: number; // Overall scale for the model
   rotationY?: number; // Rotation for the model
+  // HSL Color adjustment fields to match DesignContext
+  hue?: number; // 0-360
+  saturation?: number; // 0-1
+  lightness?: number; // 0-1
+  originalColorHex?: string;
   // modelUrl?: string; // Future: path to 3D model
-  // color?: string;    // Optional: specific color for this item
+  // color?: string;    // Optional: specific color for this item - potentially replaced by HSL logic
 }
 
 interface RotatingDesignPreviewProps {

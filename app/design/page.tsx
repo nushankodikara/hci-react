@@ -349,6 +349,44 @@ export default function DesignPage() {
                                             </Label>
                                             <Slider id="itemRotation" min={0} max={360} step={1} value={[THREE.MathUtils.radToDeg(selectedItem.rotationY ?? 0)]} onValueChange={handleRotationChange} className="my-2 [&>span:first-child]:bg-orange-500 [&>span:first-child_span]:bg-slate-50"/>
                                         </div>
+                                        {/* --- HSL Controls --- */}
+                                        <Separator className="bg-slate-600 my-2" />
+                                        <div className="grid w-full items-center gap-1.5">
+                                            <Label htmlFor="itemHue" className={`flex items-center justify-between ${labelStyles}`}>
+                                                <span className="flex items-center gap-1"><Palette className="h-3 w-3 text-orange-400/80"/> Hue</span>
+                                                <span className="text-slate-200">{selectedItem.hue ?? 0}°</span>
+                                            </Label>
+                                            <Slider 
+                                                id="itemHue" 
+                                                min={0} max={360} step={1} 
+                                                value={[selectedItem.hue ?? 0]} 
+                                                onValueChange={(value) => updateFurniture(selectedItem.id, { hue: value[0] })} 
+                                                className="my-2 [&>span:first-child]:bg-orange-500 [&>span:first-child_span]:bg-slate-50"/>
+                                        </div>
+                                        <div className="grid w-full items-center gap-1.5">
+                                            <Label htmlFor="itemSaturation" className={`flex items-center justify-between ${labelStyles}`}>
+                                                <span className="flex items-center gap-1"><Palette className="h-3 w-3 text-orange-400/80"/> Saturation</span>
+                                                <span className="text-slate-200">{((selectedItem.saturation ?? 1) * 100).toFixed(0)}%</span>
+                                            </Label>
+                                            <Slider 
+                                                id="itemSaturation" 
+                                                min={0} max={100} step={1} 
+                                                value={[(selectedItem.saturation ?? 1) * 100]} 
+                                                onValueChange={(value) => updateFurniture(selectedItem.id, { saturation: value[0] / 100 })} 
+                                                className="my-2 [&>span:first-child]:bg-orange-500 [&>span:first-child_span]:bg-slate-50"/>
+                                        </div>
+                                        <div className="grid w-full items-center gap-1.5">
+                                            <Label htmlFor="itemLightness" className={`flex items-center justify-between ${labelStyles}`}>
+                                                <span className="flex items-center gap-1"><Palette className="h-3 w-3 text-orange-400/80"/> Lightness</span>
+                                                <span className="text-slate-200">{((selectedItem.lightness ?? 0.5) * 100).toFixed(0)}%</span> 
+                                            </Label>
+                                            <Slider 
+                                                id="itemLightness" 
+                                                min={0} max={100} step={1} 
+                                                value={[(selectedItem.lightness ?? 0.5) * 100]} // Default to 50% if not set
+                                                onValueChange={(value) => updateFurniture(selectedItem.id, { lightness: value[0] / 100 })} 
+                                                className="my-2 [&>span:first-child]:bg-orange-500 [&>span:first-child_span]:bg-slate-50"/>
+                                        </div>
                                         <Separator className="bg-slate-700"/>
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>

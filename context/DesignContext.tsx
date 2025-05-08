@@ -33,6 +33,15 @@ export interface FurnitureItem {
   scale?: number; // User-defined scale multiplier (applied on top of normalizedScale)
   color?: string; // Tint/fallback color
   rotationY?: number; // Rotation around vertical axis
+  hue?: number; // 0-360
+  saturation?: number; // 0-1 (representing 0-100%)
+  lightness?: number; // 0-1 (representing 0-100%)
+  originalColorHex?: string; // To store the base color of the material
+  // Properties for the preview/fallback box if model fails or not specified
+  width?: number; 
+  depth?: number;
+  height?: number;
+  type?: 'sofa' | 'table' | 'chair' | 'lamp' | 'generic'; // For fallback box color
 }
 
 // Define and Export the context state
